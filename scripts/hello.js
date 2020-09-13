@@ -1,17 +1,20 @@
-const { _, time } = require('@openzeppelin/test-helpers');
+const {_, time} = require('@openzeppelin/test-helpers');
 const ethers = require('ethers');
-const SushiToken = artifacts.require('SushiToken');
+const SashimiToken = artifacts.require('SashimiToken');
 const Timelock = artifacts.require('Timelock');
 const config = require('../truffle-config')
 const Web3 = require('web3');
-const web3 = new Web3(config.networks.kovan.provider());
+let web3;
+
+const argv = require('minimist')(process.argv.slice(2), {string: ['network']});
+const readlineSync = require('readline-sync');
 
 
 function encodeParameters(types, values) {
     const abi = new ethers.utils.AbiCoder();
-    try{
+    try {
         return abi.encode(types, values);
-    }catch(e) {
+    } catch (e) {
         console.log(e);
     }
 }
@@ -21,8 +24,8 @@ async function latestBlockTIme() {
     return new web3.utils.BN(block.timestamp);
 }
 
-async function setTimeLockPendingAdminQueueTransaction(alice, bob) {
-
+async function setTimeLockPendingAdminQueueTransaction(alice) {
+    console.log('setTimeLockPendingAdminQueueTransaction..');
     let lastest = await latestBlockTIme();
     console.log('latest: ', lastest.toString());
     let eta = lastest.add(time.duration.minutes(10));
@@ -31,7 +34,7 @@ async function setTimeLockPendingAdminQueueTransaction(alice, bob) {
     let accounts = await web3.eth.getAccounts();
     // console.log('bob:', bobAccount)
 
-    let params = encodeParameters(['address'], [accounts[0]]);
+    let params = encodeParameters(['address'], [accounts[1]]);
     console.log('params', params.toString())
     await this.timelock.queueTransaction(
         this.timelock.address, '0', 'setPendingAdmin(address)',
@@ -46,12 +49,12 @@ async function setTimeLockPendingAdminQueueTransaction(alice, bob) {
 }
 
 async function setTimeLockPendingAdminExecuteTransaction(alice, etaNumber) {
-
+    console.log('setTimeLockPendingAdminExecuteTransaction..');
     let accounts = await web3.eth.getAccounts();
     let eta = new web3.utils.BN(etaNumber);
     console.log('eta: ', eta.toString())
 
-    let params = encodeParameters(['address'], [accounts[0]]);
+    let params = encodeParameters(['address'], [accounts[1]]);
     console.log('params', params.toString())
     await this.timelock.executeTransaction(
         this.timelock.address, '0', 'setPendingAdmin(address)',
@@ -65,19 +68,15 @@ async function setTimeLockPendingAdminExecuteTransaction(alice, etaNumber) {
     });
 }
 
+
 async function setMigratorQueueTransaction(bob, migrator) {
-    this.chef = await SushiToken.at("0x1DaeD74ed1dD7C9Dabbe51361ac90A69d851234D");
-    this.timelock = await Timelock.at("0x42bF80A92734de221889049e91187a07464607B1");
-    // console.log(this.sushi.address);
-    console.log('hello2');
+    console.log('setMigratorQueueTransaction..');
 
     let lastest = await latestBlockTIme();
     console.log('latest: ', lastest.toString());
     let eta = lastest.add(time.duration.minutes(3));
     console.log('eta: ', eta.toString())
 
-    // let accounts = await web3.eth.getAccounts();
-    // console.log('bob:', bobAccount)
 
     let params = encodeParameters(['address'], [migrator]);
     console.log('params', params.toString())
@@ -94,6 +93,7 @@ async function setMigratorQueueTransaction(bob, migrator) {
 }
 
 async function setMigratorExecuteTransaction(bob, etaNumber, migrator) {
+    console.log('setMigratorExecuteTransaction..');
     let eta = new web3.utils.BN(etaNumber);
     console.log('eta: ', eta.toString())
 
@@ -112,22 +112,165 @@ async function setMigratorExecuteTransaction(bob, etaNumber, migrator) {
 }
 
 
+async function addPoolQueueTransaction(bob) {
+    console.log('addPoolQueueTransaction..');
+
+    let lastest = await latestBlockTIme();
+    console.log('latest: ', lastest.toString());
+    let eta = lastest.add(time.duration.minutes(config.addPool.delay));
+    console.log('eta: ', eta.toString())
+
+    let allocPoint = config.addPool.allocPoint;
+    let lpToken = config.addPool.lpAddress;
+
+    let params = encodeParameters(['uint256', 'address', 'bool'], [allocPoint, lpToken, false]);
+    console.log('params', params.toString())
+    await this.timelock.queueTransaction(
+        this.chef.address, '0', 'add(uint256,address,bool)',
+        params,
+        eta,
+        {from: bob}
+    ).then(function (t) {
+        console.log("Transaction - :", t)
+    }).catch(function (e) {
+        console.log(e);
+    });
+}
+
+async function addPoolExecuteTransaction(bob) {
+    console.log('addPoolExecuteTransaction..');
+    let eta = new web3.utils.BN(config.etaNumber);
+    console.log('eta: ', eta.toString())
+
+    let allocPoint = config.addPool.allocPoint;
+    let lpToken = config.addPool.lpAddress;
+
+    let params = encodeParameters(['uint256', 'address', 'bool'], [allocPoint, lpToken, false]);
+    console.log('params', params.toString())
+
+    await this.timelock.executeTransaction(
+        this.chef.address, '0', 'add(uint256,address,bool)',
+        params,
+        eta,
+        {from: bob}
+    ).then(function (t) {
+        console.log("Transaction - :", t)
+    }).catch(function (e) {
+        console.log(e);
+    });
+}
+
+async function setPointQueueTransaction(bob) {
+    console.log('setPointQueueTransaction..');
+
+    let lastest = await latestBlockTIme();
+    console.log('latest: ', lastest.toString());
+    let eta = lastest.add(time.duration.minutes(config.setAllocPoint.delay));
+    console.log('eta: ', eta.toString())
+
+    let pid = config.setAllocPoint.pid;
+    let allocPoint = config.setAllocPoint.allocPoint
+    let params = encodeParameters(['uint256', 'uint256', 'bool'], [pid, allocPoint, false]);
+    console.log('params', params.toString())
+    await this.timelock.queueTransaction(
+        this.chef.address, '0', 'set(uint256,uint256,bool)',
+        params,
+        eta,
+        {from: bob}
+    ).then(function (t) {
+        console.log("Transaction - :", t)
+    }).catch(function (e) {
+        console.log(e);
+    });
+}
+
+
+async function setPointExecuteTransaction(bob) {
+    console.log('setPointExecuteTransaction..');
+
+    let pid = config.setAllocPoint.pid;
+    let allocPoint = config.setAllocPoint.allocPoint
+    let eta = new web3.utils.BN(config.etaNumber);
+    console.log('eta: ', eta.toString())
+
+    let params = encodeParameters(['uint256', 'uint256', 'bool'], [pid, allocPoint, false]);
+    console.log('params', params.toString())
+    await this.timelock.executeTransaction(
+        this.chef.address, '0', 'set(uint256,uint256,bool)',
+        params,
+        eta,
+        {from: bob}
+    ).then(function (t) {
+        console.log("Transaction - :", t)
+    }).catch(function (e) {
+        console.log(e);
+    });
+}
+
+async function useKovanProvider() {
+    console.log('using kovan provider..')
+    web3 = new Web3(config.networks.kovan.provider());
+    this.chef = await SashimiToken.at(config.networks.kovan.contracts.chef);
+    this.timelock = await Timelock.at(config.networks.kovan.contracts.timeLock);
+    // this.sashimi = await SashimiToken.at(config.networks.kovan.contracts.sashimi);
+}
+
+async function useMainnetProvider() {
+    console.log('using mainnet provider..')
+    web3 = new Web3(config.networks.mainnet.provider());
+    this.chef = await SashimiToken.at(config.networks.mainnet.contracts.chef);
+    this.timelock = await Timelock.at(config.networks.mainnet.contracts.timeLock);
+    // this.sashimi = await SashimiToken.at(config.networks.mainnet.contracts.sashimi);
+}
+
 module.exports = async function () {
-    this.chef = await SushiToken.at("0x1DaeD74ed1dD7C9Dabbe51361ac90A69d851234D");
-    this.timelock = await Timelock.at("0x42bF80A92734de221889049e91187a07464607B1");
-    this.sushi = await SushiToken.at("0x9EB246347d5055440ADC1eC10a040d4d627abA56");
+
+    // let now = await latestBlockTIme();
+    // console.log('latest: ', now.toString());
+
+    console.log(`network: ${argv['network']}\n`
+        + `transaction: ${config.transaction}\n`
+        + `time lock type: ${config.timeLockType}\n`
+    + `etaNumber: ${config.etaNumber}\n`);
+    // + `now: ${now.toString()}\n`);
+
+    if (readlineSync.keyInYN('Are you sure?')) {
+        // 'Y' key was pressed.
+        console.log('Yes.');
+        // Do something...
+    } else {
+        // Another key was pressed.
+        console.log('No.');
+        return;
+    }
+
+    if (argv['network'] === 'kovan') {
+        await useKovanProvider()
+    } else if (argv['network'] === 'mainnet') {
+        await useMainnetProvider();
+    }
 
     let alice = '0x2D4E11221b960E4Ed6D0D2358e26b9c89DfF404a'
     let bob = '0x0FaEF44d1373F6fdE75926E4564baB5B2d645944'
+    let jack = '0x8a2a5c5e4902bC5f3C2214aa37567Dc901F874d4'
     console.log('alice: ', alice);
     console.log('bob: ', bob);
 
     // await setTimeLockPendingAdminQueueTransaction(alice);
     // await setTimeLockPendingAdminExecuteTransaction(alice, 1599919220);
     // await setMigratorQueueTransaction(bob , '0xB4f85885C31588bE5e981124eF72fe84037cC5AB');
-    await setMigratorExecuteTransaction(bob, 1599930352, '0xB4f85885C31588bE5e981124eF72fe84037cC5AB');
+    // await setMigratorExecuteTransaction(bob, 1599930352, '0xB4f85885C31588bE5e981124eF72fe84037cC5AB');
 
-    console.log('hello end');
+    if (config.transaction === 'setPoint' && config.timeLockType === 'queue')
+        await setPointQueueTransaction(bob);
+    else if (config.transaction === 'setPoint' && config.timeLockType === 'execute')
+        await setPointExecuteTransaction(bob);
+    else if (config.transaction === 'addPool' && config.timeLockType === 'queue')
+        await addPoolQueueTransaction(bob);
+    else if (config.transaction === 'addPool' && config.timeLockType === 'execute')
+        await addPoolExecuteTransaction(bob);
+
+    console.log('End.');
 }
 
 
@@ -136,3 +279,4 @@ module.exports = async function () {
 // https://kovan.etherscan.io/address/0x69d433d206368c1d61edb687a41e50cb14cf8013  uniswapfactory v0.5.16+commit.9c3226ce  Optimized
 // https://kovan.etherscan.io/address/0x078037fd8baae816a10299252c3f15312e22da6e#code uniswappair v0.5.16+commit.9c3226ce Optimized
 // https://kovan.etherscan.io/address/0xB4f85885C31588bE5e981124eF72fe84037cC5AB#code Migrator v0.6.12+commit.27d51765
+
