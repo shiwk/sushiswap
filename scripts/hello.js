@@ -24,23 +24,22 @@ async function latestBlockTIme() {
     return new web3.utils.BN(block.timestamp);
 }
 
-async function setTimeLockPendingAdminQueueTransaction(alice) {
-    console.log('setTimeLockPendingAdminQueueTransaction..');
+async function setTimeLockPendingAdminQueueTransaction(sender) {
+    console.log('setTimeLockPendingAdmin - Queue - Transaction..');
     let lastest = await latestBlockTIme();
     console.log('latest: ', lastest.toString());
-    let eta = lastest.add(time.duration.minutes(10));
+    let eta = lastest.add(time.duration.minutes(config.delay));
     console.log('eta: ', eta.toString())
 
-    let accounts = await web3.eth.getAccounts();
-    // console.log('bob:', bobAccount)
 
-    let params = encodeParameters(['address'], [accounts[1]]);
+    let newPendingOwner = config.setPendingAdmin.pendingAdmin;
+    let params = encodeParameters(['address'], [newPendingOwner]);
     console.log('params', params.toString())
     await this.timelock.queueTransaction(
         this.timelock.address, '0', 'setPendingAdmin(address)',
         params,
         eta,
-        {from: alice}
+        {from: sender}
     ).then(function (t) {
         console.log("Transaction - :", t)
     }).catch(function (e) {
@@ -48,19 +47,19 @@ async function setTimeLockPendingAdminQueueTransaction(alice) {
     });
 }
 
-async function setTimeLockPendingAdminExecuteTransaction(alice, etaNumber) {
-    console.log('setTimeLockPendingAdminExecuteTransaction..');
-    let accounts = await web3.eth.getAccounts();
-    let eta = new web3.utils.BN(etaNumber);
+async function setTimeLockPendingAdminExecuteTransaction(sender) {
+    console.log('setTimeLockPendingAdmin - Execute - Transaction..');
+    let eta = new web3.utils.BN(config.etaNumber);
     console.log('eta: ', eta.toString())
 
-    let params = encodeParameters(['address'], [accounts[1]]);
+    let newPendingOwner = config.setPendingAdmin.pendingAdmin;
+    let params = encodeParameters(['address'], [newPendingOwner]);
     console.log('params', params.toString())
     await this.timelock.executeTransaction(
         this.timelock.address, '0', 'setPendingAdmin(address)',
         params,
         eta,
-        {from: alice}
+        {from: sender}
     ).then(function (t) {
         console.log("Transaction - :", t)
     }).catch(function (e) {
@@ -69,7 +68,7 @@ async function setTimeLockPendingAdminExecuteTransaction(alice, etaNumber) {
 }
 
 
-async function setMigratorQueueTransaction(bob, migrator) {
+async function setMigratorQueueTransaction(sender, migrator) {
     console.log('setMigratorQueueTransaction..');
 
     let lastest = await latestBlockTIme();
@@ -84,7 +83,7 @@ async function setMigratorQueueTransaction(bob, migrator) {
         this.chef.address, '0', 'setMigrator(address)',
         params,
         eta,
-        {from: bob}
+        {from: sender}
     ).then(function (t) {
         console.log("Transaction - :", t)
     }).catch(function (e) {
@@ -92,7 +91,7 @@ async function setMigratorQueueTransaction(bob, migrator) {
     });
 }
 
-async function setMigratorExecuteTransaction(bob, etaNumber, migrator) {
+async function setMigratorExecuteTransaction(sender, etaNumber, migrator) {
     console.log('setMigratorExecuteTransaction..');
     let eta = new web3.utils.BN(etaNumber);
     console.log('eta: ', eta.toString())
@@ -103,7 +102,7 @@ async function setMigratorExecuteTransaction(bob, etaNumber, migrator) {
         this.chef.address, '0', 'setMigrator(address)',
         params,
         eta,
-        {from: bob}
+        {from: sender}
     ).then(function (t) {
         console.log("Transaction - :", t)
     }).catch(function (e) {
@@ -112,12 +111,56 @@ async function setMigratorExecuteTransaction(bob, etaNumber, migrator) {
 }
 
 
-async function addPoolQueueTransaction(bob) {
+async function transferOwnershipQueueTransaction(sender) {
+    console.log('transferOwnership-Queue-Transaction..');
+
+    let lastest = await latestBlockTIme();
+    console.log('latest: ', lastest.toString());
+    let eta = lastest.add(time.duration.minutes(config.delay));
+    console.log('eta: ', eta.toString())
+
+    let newOwner = config.transferOwnership.newOwner;
+    let params = encodeParameters(['address'], [newOwner]);
+    console.log('params', params.toString())
+    await this.timelock.queueTransaction(
+        this.chef.address, '0', 'transferOwnership(address)',
+        params,
+        eta,
+        {from: sender}
+    ).then(function (t) {
+        console.log("Transaction - :", t)
+    }).catch(function (e) {
+        console.log(e);
+    });
+}
+
+async function transferOwnershipExecuteTransaction(sender) {
+    console.log('transferOwnership-Execute-Transaction..');
+    let eta = new web3.utils.BN(config.etaNumber);
+    console.log('eta: ', eta.toString())
+
+    let newOwner = config.transferOwnership.newOwner;
+    let params = encodeParameters(['address'], [newOwner]);
+
+    console.log('params', params.toString())
+    await this.timelock.executeTransaction(
+        this.chef.address, '0', 'transferOwnership(address)',
+        params,
+        eta,
+        {from: sender}
+    ).then(function (t) {
+        console.log("Transaction - :", t)
+    }).catch(function (e) {
+        console.log(e);
+    });
+}
+
+async function addPoolQueueTransaction(sender) {
     console.log('addPoolQueueTransaction..');
 
     let lastest = await latestBlockTIme();
     console.log('latest: ', lastest.toString());
-    let eta = lastest.add(time.duration.minutes(config.addPool.delay));
+    let eta = lastest.add(time.duration.minutes(config.delay));
     console.log('eta: ', eta.toString())
 
     let allocPoint = config.addPool.allocPoint;
@@ -129,7 +172,7 @@ async function addPoolQueueTransaction(bob) {
         this.chef.address, '0', 'add(uint256,address,bool)',
         params,
         eta,
-        {from: bob}
+        {from: sender}
     ).then(function (t) {
         console.log("Transaction - :", t)
     }).catch(function (e) {
@@ -137,7 +180,7 @@ async function addPoolQueueTransaction(bob) {
     });
 }
 
-async function addPoolExecuteTransaction(bob) {
+async function addPoolExecuteTransaction(sender) {
     console.log('addPoolExecuteTransaction..');
     let eta = new web3.utils.BN(config.etaNumber);
     console.log('eta: ', eta.toString())
@@ -152,7 +195,7 @@ async function addPoolExecuteTransaction(bob) {
         this.chef.address, '0', 'add(uint256,address,bool)',
         params,
         eta,
-        {from: bob}
+        {from: sender}
     ).then(function (t) {
         console.log("Transaction - :", t)
     }).catch(function (e) {
@@ -160,12 +203,12 @@ async function addPoolExecuteTransaction(bob) {
     });
 }
 
-async function setPointQueueTransaction(bob) {
+async function setPointQueueTransaction(sender) {
     console.log('setPointQueueTransaction..');
 
     let lastest = await latestBlockTIme();
     console.log('latest: ', lastest.toString());
-    let eta = lastest.add(time.duration.minutes(config.setAllocPoint.delay));
+    let eta = lastest.add(time.duration.minutes(config.delay));
     console.log('eta: ', eta.toString())
 
     let pid = config.setAllocPoint.pid;
@@ -176,7 +219,7 @@ async function setPointQueueTransaction(bob) {
         this.chef.address, '0', 'set(uint256,uint256,bool)',
         params,
         eta,
-        {from: bob}
+        {from: sender}
     ).then(function (t) {
         console.log("Transaction - :", t)
     }).catch(function (e) {
@@ -185,7 +228,7 @@ async function setPointQueueTransaction(bob) {
 }
 
 
-async function setPointExecuteTransaction(bob) {
+async function setPointExecuteTransaction(sender) {
     console.log('setPointExecuteTransaction..');
 
     let pid = config.setAllocPoint.pid;
@@ -199,7 +242,7 @@ async function setPointExecuteTransaction(bob) {
         this.chef.address, '0', 'set(uint256,uint256,bool)',
         params,
         eta,
-        {from: bob}
+        {from: sender}
     ).then(function (t) {
         console.log("Transaction - :", t)
     }).catch(function (e) {
@@ -224,15 +267,11 @@ async function useMainnetProvider() {
 }
 
 module.exports = async function () {
-
-    // let now = await latestBlockTIme();
-    // console.log('latest: ', now.toString());
-
     console.log(`network: ${argv['network']}\n`
         + `transaction: ${config.transaction}\n`
         + `time lock type: ${config.timeLockType}\n`
-    + `etaNumber: ${config.etaNumber}\n`);
-    // + `now: ${now.toString()}\n`);
+        + `etaNumber: ${config.etaNumber}\n`
+        + `sender: ${config.sender}`);
 
     if (readlineSync.keyInYN('Are you sure?')) {
         // 'Y' key was pressed.
@@ -250,33 +289,33 @@ module.exports = async function () {
         await useMainnetProvider();
     }
 
-    let alice = '0x2D4E11221b960E4Ed6D0D2358e26b9c89DfF404a'
-    let bob = '0x0FaEF44d1373F6fdE75926E4564baB5B2d645944'
-    let jack = '0x8a2a5c5e4902bC5f3C2214aa37567Dc901F874d4'
-    console.log('alice: ', alice);
-    console.log('bob: ', bob);
-
-    // await setTimeLockPendingAdminQueueTransaction(alice);
-    // await setTimeLockPendingAdminExecuteTransaction(alice, 1599919220);
-    // await setMigratorQueueTransaction(bob , '0xB4f85885C31588bE5e981124eF72fe84037cC5AB');
-    // await setMigratorExecuteTransaction(bob, 1599930352, '0xB4f85885C31588bE5e981124eF72fe84037cC5AB');
-
-    if (config.transaction === 'setPoint' && config.timeLockType === 'queue')
-        await setPointQueueTransaction(bob);
-    else if (config.transaction === 'setPoint' && config.timeLockType === 'execute')
-        await setPointExecuteTransaction(bob);
-    else if (config.transaction === 'addPool' && config.timeLockType === 'queue')
-        await addPoolQueueTransaction(bob);
-    else if (config.transaction === 'addPool' && config.timeLockType === 'execute')
-        await addPoolExecuteTransaction(bob);
+    if (config.transaction === config.methods.setPointMethod) {
+        if (config.timeLockType === config.txTypes.queueTransaction)
+            await setPointQueueTransaction(config.sender);
+        else if (config.timeLockType === config.txTypes.executeTransaction)
+            await setPointExecuteTransaction(config.sender);
+    }
+    else if (config.transaction === config.methods.addPoolMethod) {
+        if (config.timeLockType === config.txTypes.queueTransaction)
+            await addPoolQueueTransaction(config.sender);
+        else if ( config.timeLockType === config.txTypes.executeTransaction)
+            await addPoolExecuteTransaction(config.sender);
+    }
+    else if (config.transaction === config.methods.transferOwnershipMethod) {
+        if (config.timeLockType === config.txTypes.queueTransaction)
+            await transferOwnershipQueueTransaction(config.sender);
+        else if (config.timeLockType === config.txTypes.executeTransaction)
+            await transferOwnershipExecuteTransaction(config.sender);
+    } else if (config.transaction === config.methods.setPendingAdminMethod) {
+        if (config.timeLockType === config.txTypes.queueTransaction)
+            await setTimeLockPendingAdminQueueTransaction(config.sender);
+        else if (config.timeLockType === config.txTypes.executeTransaction)
+            await setTimeLockPendingAdminExecuteTransaction(config.sender);
+    }
 
     console.log('End.');
 }
 
 
-// https://abi.hashex.org/   abi encoder
-// NOTE: Use the swap&pair as their existing contracts(https://kovan.etherscan.io/address/0x5c69bee701ef814a2b6a3edd4b1652cb9cc5aa6f, https://kovan.etherscan.io/address/0xB10cf58E08b94480fCb81d341A63295eBb2062C2#code)
-// https://kovan.etherscan.io/address/0x69d433d206368c1d61edb687a41e50cb14cf8013  uniswapfactory v0.5.16+commit.9c3226ce  Optimized
-// https://kovan.etherscan.io/address/0x078037fd8baae816a10299252c3f15312e22da6e#code uniswappair v0.5.16+commit.9c3226ce Optimized
-// https://kovan.etherscan.io/address/0xB4f85885C31588bE5e981124eF72fe84037cC5AB#code Migrator v0.6.12+commit.27d51765
+
 
