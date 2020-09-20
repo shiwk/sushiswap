@@ -250,6 +250,28 @@ async function setPointExecuteTransaction(sender) {
     });
 }
 
+async function setPointCancelTransaction(sender) {
+    console.log('setPointCancelTransaction..');
+
+    let pid = config.setAllocPoint.pid;
+    let allocPoint = config.setAllocPoint.allocPoint
+    let eta = new web3.utils.BN(config.etaNumber);
+    console.log('eta: ', eta.toString())
+
+    let params = encodeParameters(['uint256', 'uint256', 'bool'], [pid, allocPoint, false]);
+    console.log('params', params.toString())
+    await this.timelock.cancelTransaction(
+        this.chef.address, '0', 'set(uint256,uint256,bool)',
+        params,
+        eta,
+        {from: sender}
+    ).then(function (t) {
+        console.log("Transaction - :", t)
+    }).catch(function (e) {
+        console.log(e);
+    });
+}
+
 async function useKovanProvider() {
     console.log('using kovan provider..')
     web3 = new Web3(config.networks.kovan.provider());
@@ -294,6 +316,8 @@ module.exports = async function () {
             await setPointQueueTransaction(config.sender);
         else if (config.timeLockType === config.txTypes.executeTransaction)
             await setPointExecuteTransaction(config.sender);
+        else if (config.timeLockType === config.txTypes.cancelTransaction)
+            await setPointCancelTransaction(config.sender);
     }
     else if (config.transaction === config.methods.addPoolMethod) {
         if (config.timeLockType === config.txTypes.queueTransaction)
