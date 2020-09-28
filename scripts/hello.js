@@ -68,15 +68,15 @@ async function setTimeLockPendingAdminExecuteTransaction(sender) {
 }
 
 
-async function setMigratorQueueTransaction(sender, migrator) {
+async function setMigratorQueueTransaction(sender) {
     console.log('setMigratorQueueTransaction..');
 
     let lastest = await latestBlockTIme();
     console.log('latest: ', lastest.toString());
-    let eta = lastest.add(time.duration.minutes(3));
+    let eta = lastest.add(time.duration.minutes(config.delay));
     console.log('eta: ', eta.toString())
 
-
+    let migrator = config.setMigrator.migrator;
     let params = encodeParameters(['address'], [migrator]);
     console.log('params', params.toString())
     await this.timelock.queueTransaction(
@@ -91,11 +91,12 @@ async function setMigratorQueueTransaction(sender, migrator) {
     });
 }
 
-async function setMigratorExecuteTransaction(sender, etaNumber, migrator) {
+async function setMigratorExecuteTransaction(sender) {
     console.log('setMigratorExecuteTransaction..');
-    let eta = new web3.utils.BN(etaNumber);
+    let eta = new web3.utils.BN(config.etaNumber);
     console.log('eta: ', eta.toString())
 
+    let migrator = config.setMigrator.migrator;
     let params = encodeParameters(['address'], [migrator]);
     console.log('params', params.toString())
     await this.timelock.executeTransaction(
@@ -335,6 +336,12 @@ module.exports = async function () {
             await setTimeLockPendingAdminQueueTransaction(config.sender);
         else if (config.timeLockType === config.txTypes.executeTransaction)
             await setTimeLockPendingAdminExecuteTransaction(config.sender);
+    }
+    else if (config.transaction === config.methods.setMigratorMethod) {
+        if (config.timeLockType === config.txTypes.queueTransaction)
+            await setMigratorQueueTransaction(config.sender);
+        else if (config.timeLockType === config.txTypes.executeTransaction)
+            await setMigratorExecuteTransaction(config.sender);
     }
 
     console.log('End.');
