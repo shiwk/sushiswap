@@ -429,7 +429,7 @@ async function useMainnetProvider() {
     this.chef = await SashimiToken.at(config.networks.mainnet.contracts.chef);
     this.timelock = await Timelock.at(config.networks.mainnet.contracts.timeLock);
     this.factory = await Factory.at(config.networks.mainnet.contracts.factory);
-    this.investment = await SashimiInvestment.at(onfig.networks.kovan.contracts.investment);
+    this.investment = await SashimiInvestment.at(config.networks.mainnet.contracts.investment);
 }
 
 module.exports = async function () {
