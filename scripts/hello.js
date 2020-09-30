@@ -1,11 +1,12 @@
 const {_, time} = require('@openzeppelin/test-helpers');
+const SashimiInvestment = artifacts.require('test-sashimivault/SashimiInvestment');
 const ethers = require('ethers');
 const SashimiToken = artifacts.require('SashimiToken');
 const Timelock = artifacts.require('Timelock');
 const Factory = artifacts.require('UniswapV2Factory');
 const config = require('../truffle-config')
 const Web3 = require('web3');
-const SashimiInvestment = artifacts.require("SashimiInvestment");
+
 
 let web3;
 
@@ -151,6 +152,53 @@ async function addProviderExecuteTransaction(sender) {
     console.log('params', params.toString())
     await this.timelock.executeTransaction(
         this.investment.address, '0', 'addProvider(address,address)',
+        params,
+        eta,
+        {from: sender}
+    ).then(function (t) {
+        console.log("Transaction - :", t)
+    }).catch(function (e) {
+        console.log(e);
+    });
+}
+
+async function changeReservesRatioQueueTransaction(sender) {
+    console.log('changeReservesRatio QueueTransaction..');
+
+    let lastest = await latestBlockTIme();
+    console.log('latest: ', lastest.toString());
+    let eta = lastest.add(time.duration.minutes(config.delay));
+    console.log('eta: ', eta.toString())
+
+    let token = config.changeReservesRatio.token;
+    let reservesRatio = config.changeReservesRatio.reservesRatio;
+
+    let params = encodeParameters(['address','uint256'], [token, reservesRatio]);
+    console.log('params', params.toString())
+    await this.timelock.queueTransaction(
+        this.investment.address, '0', 'changeReservesRatio(address,uint256)',
+        params,
+        eta,
+        {from: sender}
+    ).then(function (t) {
+        console.log("Transaction - :", t)
+    }).catch(function (e) {
+        console.log(e);
+    });
+}
+
+async function changeReservesRatioExecuteTransaction(sender) {
+    console.log('setFeeTo ExecuteTransaction..');
+    let eta = new web3.utils.BN(config.etaNumber);
+    console.log('eta: ', eta.toString())
+
+    let token = config.changeReservesRatio.token;
+    let reservesRatio = config.changeReservesRatio.reservesRatio;
+
+    let params = encodeParameters(['address','uint256'], [token, reservesRatio]);
+    console.log('params', params.toString())
+    await this.timelock.executeTransaction(
+        this.investment.address, '0', 'changeReservesRatio(address,uint256)',
         params,
         eta,
         {from: sender}
@@ -372,7 +420,7 @@ async function useKovanProvider() {
     this.chef = await SashimiToken.at(config.networks.kovan.contracts.chef);
     this.timelock = await Timelock.at(config.networks.kovan.contracts.timeLock);
     this.factory = await Factory.at(config.networks.kovan.contracts.factory);
-    this.investment = await SashimiInvestment.at(onfig.networks.kovan.contracts.investment);
+    this.investment = await SashimiInvestment.at(config.networks.kovan.contracts.investment);
 }
 
 async function useMainnetProvider() {
@@ -450,7 +498,12 @@ module.exports = async function () {
         else if (config.timeLockType === config.txTypes.executeTransaction)
             await addProviderExecuteTransaction(config.sender);
     }
-
+    else if (config.transaction === config.methods.changeReservesRatioMethod) {
+        if (config.timeLockType === config.txTypes.queueTransaction)
+            await changeReservesRatioQueueTransaction(config.sender);
+        else if (config.timeLockType === config.txTypes.executeTransaction)
+            await changeReservesRatioExecuteTransaction(config.sender);
+    }
     console.log('End.');
 }
 

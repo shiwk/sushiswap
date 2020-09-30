@@ -8,6 +8,7 @@ const transferOwnershipMethod = 'transferOwnership'
 const setMigratorMethod = 'setMigratorMethod'
 const setFeeToMethod = 'SetFeeTo'
 const addProviderMethod = 'addProvider'
+const changeReservesRatioMethod = 'changeReservesRatio'
 
 const executeTransaction = 'executeTransaction'
 const queueTransaction = 'queueTransaction'
@@ -22,7 +23,8 @@ module.exports = {
         transferOwnershipMethod,
         setMigratorMethod,
         setFeeToMethod,
-        addProviderMethod
+        addProviderMethod,
+        changeReservesRatioMethod
     },
 
     txTypes:{
@@ -60,7 +62,7 @@ module.exports = {
                 timeLock: '0x2f8ab5cD7179B3d42d177a45B18cF7C8FF8EFA77',
                 chef: '0xEFAacB61604b0185c446B3039b111AF836dA8Ff2',
                 factory: '0xC8DdE00dc855c7126181e25f093822dD5676fee1',
-                investment : ''
+                investment : '0xc16121A9e3fC61037ee83b4C4d0AE06ef92326A5'
             }
         },
         mainnet: {
@@ -110,8 +112,13 @@ module.exports = {
     },
 
     addProvider : {
-        token : '',
-        vault : ''
+        token : '0xA050886815CFc52a24B9C4aD044ca199990B6690',
+        vault : '0x3B5483cDee2cF8C6e5B1598eF2cD9982659d307a'
+    },
+
+    changeReservesRatio : {
+        token : '0xA050886815CFc52a24B9C4aD044ca199990B6690',
+        reservesRatio : '10000'
     },
 
     setFeeTo : {
@@ -133,10 +140,11 @@ module.exports = {
     // transaction : setPointMethod,
     // transaction : transferOwnershipMethod,
     // transaction : setMigratorMethod,
-    // transaction : addProviderMethod,
-    transaction : setFeeToMethod,
+    //transaction : addProviderMethod,
+    transaction : changeReservesRatioMethod,
+    //transaction : setFeeToMethod,
 
-    // timeLockType: queueTransaction,
+    //timeLockType: queueTransaction,
     timeLockType: executeTransaction,
     // timeLockType: cancelTransaction,
 
