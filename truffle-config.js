@@ -6,6 +6,8 @@ const addPoolMethod = 'addPool'
 const setPointMethod = 'setPoint'
 const transferOwnershipMethod = 'transferOwnership'
 const setMigratorMethod = 'setMigratorMethod'
+const setFeeToMethod = 'SetFeeTo'
+const addProviderMethod = 'addProvider'
 
 const executeTransaction = 'executeTransaction'
 const queueTransaction = 'queueTransaction'
@@ -18,7 +20,9 @@ module.exports = {
         addPoolMethod,
         setPointMethod,
         transferOwnershipMethod,
-        setMigratorMethod
+        setMigratorMethod,
+        setFeeToMethod,
+        addProviderMethod
     },
 
     txTypes:{
@@ -54,7 +58,9 @@ module.exports = {
                 // sashimi : '0x9EB246347d5055440ADC1eC10a040d4d627abA56',
                 // migrator : '0xB4f85885C31588bE5e981124eF72fe84037cC5AB',
                 timeLock: '0x2f8ab5cD7179B3d42d177a45B18cF7C8FF8EFA77',
-                chef: '0xEFAacB61604b0185c446B3039b111AF836dA8Ff2'
+                chef: '0xEFAacB61604b0185c446B3039b111AF836dA8Ff2',
+                factory: '0xC8DdE00dc855c7126181e25f093822dD5676fee1',
+                investment : ''
             }
         },
         mainnet: {
@@ -70,7 +76,8 @@ module.exports = {
                 // sashimi : '0x9EB246347d5055440ADC1eC10a040d4d627abA56',
                 // migrator : '0xB4f85885C31588bE5e981124eF72fe84037cC5AB',
                 timeLock: '0x84eE348617563944FFD4a23843e086A7dC0224f3',
-                chef: '0x1DaeD74ed1dD7C9Dabbe51361ac90A69d851234D'
+                chef: '0x1DaeD74ed1dD7C9Dabbe51361ac90A69d851234D',
+                factory: '0xF028F723ED1D0fE01cC59973C49298AA95c57472'
             }
         }
     },
@@ -102,6 +109,15 @@ module.exports = {
         pendingAdmin : keys.address.alice,
     },
 
+    addProvider : {
+        token : '',
+        vault : ''
+    },
+
+    setFeeTo : {
+        feeTo : '0x3a979edf5c12092a6d5048b1849c2a32900fdfce'
+    },
+
     addPool: {
         lpAddress : '0x96559937e9c4475160CA040b16cDA93E3EfBD75A',
         allocPoint: '500',
@@ -113,22 +129,24 @@ module.exports = {
     },
 
     // transaction : setPendingAdminMethod,
-    transaction : addPoolMethod,
+    // transaction : addPoolMethod,
     // transaction : setPointMethod,
     // transaction : transferOwnershipMethod,
     // transaction : setMigratorMethod,
+    // transaction : addProviderMethod,
+    transaction : setFeeToMethod,
 
-    timeLockType: queueTransaction,
-    // timeLockType: executeTransaction,
+    // timeLockType: queueTransaction,
+    timeLockType: executeTransaction,
     // timeLockType: cancelTransaction,
 
-    sender : keys.address.bob,
-    // sender : keys.address.lisa,
+    // sender : keys.address.bob,
+    sender : keys.address.lisa,
 
-    // delay : 3,
-    delay : 1470,  // in minutes, 1 day + 30 min
+    delay : 3, // in minutes, 3 min
+    // delay : 1470,  // in minutes, 1 day + 30 min
 
-    etaNumber: 1601291405,
+    etaNumber: 1601438704,
 };
 
 

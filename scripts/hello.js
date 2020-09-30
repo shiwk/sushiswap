@@ -2,8 +2,11 @@ const {_, time} = require('@openzeppelin/test-helpers');
 const ethers = require('ethers');
 const SashimiToken = artifacts.require('SashimiToken');
 const Timelock = artifacts.require('Timelock');
+const Factory = artifacts.require('UniswapV2Factory');
 const config = require('../truffle-config')
 const Web3 = require('web3');
+const SashimiInvestment = artifacts.require("SashimiInvestment");
+
 let web3;
 
 const argv = require('minimist')(process.argv.slice(2), {string: ['network']});
@@ -47,6 +50,7 @@ async function setTimeLockPendingAdminQueueTransaction(sender) {
     });
 }
 
+
 async function setTimeLockPendingAdminExecuteTransaction(sender) {
     console.log('setTimeLockPendingAdmin - Execute - Transaction..');
     let eta = new web3.utils.BN(config.etaNumber);
@@ -67,6 +71,95 @@ async function setTimeLockPendingAdminExecuteTransaction(sender) {
     });
 }
 
+async function setFeeToQueueTransaction(sender) {
+    console.log('setFeeTo QueueTransaction..');
+
+    let lastest = await latestBlockTIme();
+    console.log('latest: ', lastest.toString());
+    let eta = lastest.add(time.duration.minutes(config.delay));
+    console.log('eta: ', eta.toString())
+
+    let feeTo = config.setFeeTo.feeTo;
+    let params = encodeParameters(['address'], [feeTo]);
+    console.log('params', params.toString())
+    await this.timelock.queueTransaction(
+        this.factory.address, '0', 'setFeeTo(address)',
+        params,
+        eta,
+        {from: sender}
+    ).then(function (t) {
+        console.log("Transaction - :", t)
+    }).catch(function (e) {
+        console.log(e);
+    });
+}
+
+async function setFeeToExecuteTransaction(sender) {
+    console.log('addProvider ExecuteTransaction..');
+    let eta = new web3.utils.BN(config.etaNumber);
+    console.log('eta: ', eta.toString())
+
+    let feeTo = config.setFeeTo.feeTo;
+    let params = encodeParameters(['address'], [feeTo]);
+    console.log('params', params.toString())
+    await this.timelock.executeTransaction(
+        this.factory.address, '0', 'setFeeTo(address)',
+        params,
+        eta,
+        {from: sender}
+    ).then(function (t) {
+        console.log("Transaction - :", t)
+    }).catch(function (e) {
+        console.log(e);
+    });
+}
+
+async function addProviderQueueTransaction(sender) {
+    console.log('addProvider QueueTransaction..');
+
+    let lastest = await latestBlockTIme();
+    console.log('latest: ', lastest.toString());
+    let eta = lastest.add(time.duration.minutes(config.delay));
+    console.log('eta: ', eta.toString())
+
+    let token = config.addProvider.token;
+    let vault = config.addProvider.vault;
+
+    let params = encodeParameters(['address','address'], [token, vault]);
+    console.log('params', params.toString())
+    await this.timelock.queueTransaction(
+        this.investment.address, '0', 'addProvider(address,address)',
+        params,
+        eta,
+        {from: sender}
+    ).then(function (t) {
+        console.log("Transaction - :", t)
+    }).catch(function (e) {
+        console.log(e);
+    });
+}
+
+async function addProviderExecuteTransaction(sender) {
+    console.log('setFeeTo ExecuteTransaction..');
+    let eta = new web3.utils.BN(config.etaNumber);
+    console.log('eta: ', eta.toString())
+
+    let token = config.addProvider.token;
+    let vault = config.addProvider.vault;
+
+    let params = encodeParameters(['address','address'], [token, vault]);
+    console.log('params', params.toString())
+    await this.timelock.executeTransaction(
+        this.investment.address, '0', 'addProvider(address,address)',
+        params,
+        eta,
+        {from: sender}
+    ).then(function (t) {
+        console.log("Transaction - :", t)
+    }).catch(function (e) {
+        console.log(e);
+    });
+}
 
 async function setMigratorQueueTransaction(sender) {
     console.log('setMigratorQueueTransaction..');
@@ -278,7 +371,8 @@ async function useKovanProvider() {
     web3 = new Web3(config.networks.kovan.provider());
     this.chef = await SashimiToken.at(config.networks.kovan.contracts.chef);
     this.timelock = await Timelock.at(config.networks.kovan.contracts.timeLock);
-    // this.sashimi = await SashimiToken.at(config.networks.kovan.contracts.sashimi);
+    this.factory = await Factory.at(config.networks.kovan.contracts.factory);
+    this.investment = await SashimiInvestment.at(onfig.networks.kovan.contracts.investment);
 }
 
 async function useMainnetProvider() {
@@ -286,7 +380,8 @@ async function useMainnetProvider() {
     web3 = new Web3(config.networks.mainnet.provider());
     this.chef = await SashimiToken.at(config.networks.mainnet.contracts.chef);
     this.timelock = await Timelock.at(config.networks.mainnet.contracts.timeLock);
-    // this.sashimi = await SashimiToken.at(config.networks.mainnet.contracts.sashimi);
+    this.factory = await Factory.at(config.networks.mainnet.contracts.factory);
+    this.investment = await SashimiInvestment.at(onfig.networks.kovan.contracts.investment);
 }
 
 module.exports = async function () {
@@ -342,6 +437,18 @@ module.exports = async function () {
             await setMigratorQueueTransaction(config.sender);
         else if (config.timeLockType === config.txTypes.executeTransaction)
             await setMigratorExecuteTransaction(config.sender);
+    }
+    else if (config.transaction === config.methods.setFeeToMethod) {
+        if (config.timeLockType === config.txTypes.queueTransaction)
+            await setFeeToQueueTransaction(config.sender);
+        else if (config.timeLockType === config.txTypes.executeTransaction)
+            await setFeeToExecuteTransaction(config.sender);
+    }
+    else if (config.transaction === config.methods.addProviderMethod) {
+        if (config.timeLockType === config.txTypes.queueTransaction)
+            await addProviderQueueTransaction(config.sender);
+        else if (config.timeLockType === config.txTypes.executeTransaction)
+            await addProviderExecuteTransaction(config.sender);
     }
 
     console.log('End.');
