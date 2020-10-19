@@ -3853,10 +3853,10 @@ tar@^4.0.2:
     safe-buffer "^5.1.2"
     yallist "^3.0.3"
 
-test-sashimivault@1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/test-sashimivault/-/test-sashimivault-1.0.0.tgz#d6bf593da41585f8b036da65e20ce6a68000c118"
-  integrity sha512-cTavRIpTmxy88KQp4WBhPZqDOYfJ50wCCxRTfJeWxYyL5aGO8WDBIWz9LijFFozVyZgnfPs9ZdXIF5yMweJGxw==
+test-sashimivault@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/test-sashimivault/-/test-sashimivault-1.0.2.tgz#74ac70c2facf547eba7f167372b407e8651f1fa9"
+  integrity sha512-qbbEjNR/ae4W+I8oJwfaLV1ZwdNt5iKBwqq/S4dJeydo62RiYbhvyATC2aNfNd94BlJ/GaTbWAkZZxmYmOIiOQ==
   dependencies:
     "@openzeppelin/contracts" "^3.2.0"
     "@openzeppelin/test-helpers" "^0.5.6"
