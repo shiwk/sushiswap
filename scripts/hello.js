@@ -265,7 +265,7 @@ async function transferOwnershipQueueTransaction(sender) {
     let params = encodeParameters(['address'], [newOwner]);
     console.log('params', params.toString())
     await this.timelock.queueTransaction(
-        this.chef.address, '0', 'transferOwnership(address)',
+        config.transferOwnership.contract, '0', 'transferOwnership(address)',
         params,
         eta,
         {from: sender}
@@ -286,7 +286,7 @@ async function transferOwnershipExecuteTransaction(sender) {
 
     console.log('params', params.toString())
     await this.timelock.executeTransaction(
-        this.chef.address, '0', 'transferOwnership(address)',
+        config.transferOwnership.contract, '0', 'transferOwnership(address)',
         params,
         eta,
         {from: sender}
